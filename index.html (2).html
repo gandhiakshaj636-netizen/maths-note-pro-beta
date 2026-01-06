@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MathNotes Pro Beta | AKshaj GANDHI</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gradient-brand {
+            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+        }
+        .beta-banner {
+            background: linear-gradient(90deg, #1e1b4b 0%, #4f46e5 100%);
+        }
+        #noteEditor.hidden { display: none; }
+        #noteEditor { display: flex; animation: slideUp 0.3s cubic-bezier(0, 0, 0.2, 1); }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .math-tool {
+            @apply flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-90 shadow-sm;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Beta Version Announcement -->
+    <div class="beta-banner text-white px-4 py-3 text-center z-50 shadow-md">
+        <p class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.1em]">
+            🚀 This is the beta version. Official version will come in April 2026.
+        </p>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-6 py-4 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-black text-slate-900 tracking-tighter">MathNotes Pro</h1>
+            <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">AKshaj GANDHI</p>
+        </div>
+        <button onclick="sendFeedback()" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-indigo-100 transition-all">
+            Send Feedback
+        </button>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6 w-full flex-grow pb-32">
+        <div class="mb-8">
+            <h2 class="text-2xl font-black text-slate-800">Study Archive</h2>
+            <p class="text-xs text-slate-400 mt-1">Prototype testing phase for April 2026 launch.</p>
+        </div>
+        <div id="notesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+    </main>
+
+    <!-- Modal Editor -->
+    <div id="noteEditor" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]">
+            
+            <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-white">
+                <h3 class="font-black text-slate-800">Compose Note</h3>
+                <button onclick="closeEditor()" class="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200 transition-all">&times;</button>
+            </div>
+            
+            <div class="p-6 space-y-4 overflow-y-auto">
+                <input id="noteTitle" type="text" placeholder="Topic (e.g. Algebra)" 
+                       class="w-full text-xl font-bold outline-none border-b-2 border-slate-50 focus:border-indigo-400 py-2 transition-all">
+                
+                <!-- Equation Tool Bar -->
+                <div class="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
+                    <button onclick="insertMath('\\frac{a}{b}')" class="math-tool">$\frac{a}{b}$</button>
+                    <button onclick="insertMath('\\sqrt{x}')" class="math-tool">$\sqrt{x}$</button>
+                    <button onclick="insertMath('x^{n}')" class="math-tool">$x^n$</button>
+                    <button onclick="insertMath('\\int')" class="math-tool">$\int$</button>
+                    <button onclick="insertMath('\\sum')" class="math-tool">$\sum$</button>
+                    <button onclick="insertMath('\\pi')" class="math-tool">$\pi$</button>
+                    <button onclick="insertMath('\\pm')" class="math-tool">$\pm$</button>
+                </div>
+
+                <textarea id="noteContent" oninput="updatePreview()" placeholder="Type your theory here... Use buttons above to insert math symbols." 
+                          class="w-full h-44 outline-none border-none resize-none text-slate-600 font-medium leading-relaxed"></textarea>
+                
+                <div class="border-t border-slate-50 pt-4">
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-2">Math Preview</span>
+                    <div id="livePreview" class="p-5 bg-slate-50 rounded-2xl border border-slate-100 min-h-[100px] text-slate-800 text-sm">
+                        <span class="text-slate-300 italic">Previewing your equations...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-white border-t border-slate-50">
+                <button onclick="saveNote()" class="w-full gradient-brand p-5 rounded-2xl text-white font-black text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all">
+                    Save to Archive
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-40">
+        <button onclick="openEditor()" class="gradient-brand w-16 h-16 rounded-[2rem] text-white shadow-2xl shadow-indigo-400 flex items-center justify-center pointer-events-auto active:scale-90 transition transform">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+        </button>
+    </div>
+
+    <footer class="p-12 text-center border-t border-slate-100 bg-white">
+        <p class="text-slate-300 text-[9px] font-black uppercase tracking-[0.5em] mb-2">Designed By</p>
+        <h3 class="text-lg font-black text-slate-800 uppercase">AKshaj GANDHI</h3>
+        <p class="text-[10px] text-slate-300 mt-4 italic font-bold">OFFICIAL RELEASE: APRIL 2026</p>
+    </footer>
+
+    <script>
+        const MY_GMAIL = "gandhiakshaj636@gmail.com"; 
+        let notes = JSON.parse(localStorage.getItem('akshaj_beta_final')) || [];
+
+        function openEditor() {
+            document.getElementById('noteEditor').classList.remove('hidden');
+        }
+
+        function closeEditor() {
+            document.getElementById('noteEditor').classList.add('hidden');
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('livePreview').innerHTML = '<span class="text-slate-300 italic">Previewing your equations...</span>';
+        }
+
+        function insertMath(symbol) {
+            const textarea = document.getElementById('noteContent');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const replacement = `$${symbol}$`;
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            textarea.focus();
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const content = document.getElementById('noteContent').value;
+            const preview = document.getElementById('livePreview');
+            preview.innerHTML = content.replace(/\n/g, '<br>') || '<span class="text-slate-300 italic">Previewing your equations...</span>';
+            MathJax.typesetPromise([preview]);
+        }
+
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            if(!title || !content) return;
+
+            notes.unshift({ title, content, id: Date.now() });
+            localStorage.setItem('akshaj_beta_final', JSON.stringify(notes));
+            renderNotes();
+            closeEditor();
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            container.innerHTML = '';
+            if(notes.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-20 text-center text-slate-300 italic">No notes found. Tap + to create your first archive.</div>`;
+            }
+            notes.forEach((note, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-black text-slate-800">${note.title}</h4>
+                        <button onclick="deleteNote(${index})" class="text-slate-200 hover:text-red-400 font-bold px-2 text-xl">&times;</button>
+                    </div>
+                    <div class="text-sm text-slate-600 whitespace-pre-wrap">${note.content}</div>
+                `;
+                container.appendChild(card);
+            });
+            MathJax.typesetPromise([container]);
+        }
+
+        function deleteNote(index) {
+            if(confirm("Permanently delete this note?")) {
+                notes.splice(index, 1);
+                localStorage.setItem('akshaj_beta_final', JSON.stringify(notes));
+                renderNotes();
+            }
+        }
+
+        function sendFeedback() {
+            const subject = encodeURIComponent("Feedback for MathNotes Pro Official Version (April 2026)");
+            const body = encodeURIComponent("Hi Akshaj,\n\nI am testing your beta version. Here is some feedback for the official launch in April 2026:\n\n");
+            window.location.href = `mailto:${MY_GMAIL}?subject=${subject}&body=${body}`;
+        }
+
+        window.onload = renderNotes;
+    </script>
+</body>
+</html>
